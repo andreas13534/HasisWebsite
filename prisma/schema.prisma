@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  passwordHash String
+  profileImageUrl String? // Profilbild-URL/Pfad
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  images    Image[]
+  likes     Like[]
+  comments  Comment[]
+  
+  @@map("users")
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  ownerId   String
+  filename  String
+  originalName String
+  mimeType  String
+  size      Int      // in bytes
+  storageKey String  // Pfad oder S3-Key
+  createdAt DateTime @default(now())
+  expiresAt DateTime // createdAt + 1 Stunde
+  
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  likes     Like[]   @relation("ImageLikes")
+  comments  Comment[]
+  
+  @@index([expiresAt])
+  @@index([ownerId])
+  @@map("images")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  imageId   String
+  type      String   // "like" oder "dislike"
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image     Image    @relation("ImageLikes", fields: [imageId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, imageId]) // Ein User kann pro Bild nur einmal liken/disliken
+  @@index([imageId])
+  @@index([userId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  imageId   String
+  content   String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  image     Image    @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  
+  @@index([imageId])
+  @@index([userId])
+  @@map("comments")
+}
