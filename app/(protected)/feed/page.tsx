@@ -85,7 +85,8 @@ export default async function FeedPage() {
             <ImageCard
               key={image.id}
               image={image}
-              currentUserId={session.user.id as string}
+              currentUserId={session?.user?.email ?? ""}
+
             />
           ))}
         </div>
