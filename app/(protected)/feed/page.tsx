@@ -6,7 +6,7 @@ import { ImageCard } from "@/components/ImageCard";
 
 export default async function FeedPage() {
   const session = await getAuthSession();
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     redirect("/login");
   }
 
